@@ -1,0 +1,228 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Lab5CSharp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Lab 6 CSharp\n");
+           // Task1();
+           // Task2();
+           // Task3();
+           // Task4();
+        }
+
+        // Task 1 — Ієрархія тварин з інтерфейсами
+        static void Task1()
+        {
+            Console.WriteLine("--- Task 1 ---");
+            Zoo zoo = new Zoo();
+            zoo.Add(new Bird("Гуска", 3, 1.5));
+            zoo.Add(new EvenToed("Кабан", 4, "Коричневий", 4));
+            foreach (Animal animal in zoo)
+                animal.Show();
+        }
+
+        // Task 2 — Ієрархія транспорту
+        static void Task2()
+        {
+            Console.WriteLine("\n--- Task 2 ---");
+            List<ITrans> transports = new List<ITrans>
+            {
+                new Car("Toyota", "AA1234BB", 150, 400),
+                new Motorcycle("Yamaha", "MC1234AB", 180, 200, false),
+                new Truck("MAN", "TR5678CD", 100, 1000, true)
+            };
+
+            foreach (var t in transports)
+            {
+                t.Show();
+                Console.WriteLine("Вантажопідйомність: " + t.GetCapacity());
+            }
+
+            Console.WriteLine("\n> Машини з вантажопідйомністю >= 500");
+            var heavy = transports.Where(t => t.GetCapacity() >= 500);
+            foreach (var t in heavy) t.Show();
+        }
+
+        // Task 3 — Обробка виключень
+        static void Task3()
+        {
+            Console.WriteLine("\n--- Task 3 ---");
+            try
+            {
+                CauseStackOverflow(0);
+            }
+            catch (MyStackOverflowException ex)
+            {
+                Console.WriteLine("My Exception: " + ex.Message);
+            }
+            catch (StackOverflowException)
+            {
+                Console.WriteLine("Standard StackOverflowException перехоплено!");
+            }
+        }
+
+        static void CauseStackOverflow(int depth)
+        {
+            if (depth > 10000) throw new MyStackOverflowException("Рекурсія занадто глибока");
+            CauseStackOverflow(depth + 1);
+        }
+
+        // Task 4 — foreach для Zoo (IEnumerable)
+        static void Task4()
+        {
+            Console.WriteLine("\n--- Task 4 ---");
+            Zoo zoo = new Zoo();
+            zoo.Add(new Bird("Сова", 5, 1.1));
+            zoo.Add(new EvenToed("Олень", 7, "Рудий", 4));
+            foreach (var animal in zoo)
+                animal.Show();
+        }
+    }
+
+    // Інтерфейси та класи для Task1 & Task4
+    public interface IShowable
+    {
+        void Show();
+    }
+
+    public abstract class Animal : IShowable
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+
+        protected Animal(string name, int age)
+        {
+            Name = name;
+            Age = age;
+        }
+
+        public virtual void Show()
+        {
+            Console.WriteLine($"[Тварина] Ім'я: {Name}, Вік: {Age}");
+        }
+    }
+
+    public class Mammal : Animal
+    {
+        public string FurColor { get; set; }
+
+        public Mammal(string name, int age, string furColor) : base(name, age)
+        {
+            FurColor = furColor;
+        }
+
+        public override void Show()
+        {
+            Console.WriteLine($"[Ссавець] Ім'я: {Name}, Вік: {Age}, Колір шерсті: {FurColor}");
+        }
+    }
+
+    public class EvenToed : Mammal
+    {
+        public int NumberOfToes { get; set; }
+
+        public EvenToed(string name, int age, string furColor, int numberOfToes)
+            : base(name, age, furColor)
+        {
+            NumberOfToes = numberOfToes;
+        }
+
+        public override void Show()
+        {
+            Console.WriteLine($"[Парнокопитні] Ім'я: {Name}, Вік: {Age}, Колір шерсті: {FurColor}, Кількість пальців: {NumberOfToes}");
+        }
+    }
+
+    public class Bird : Animal
+    {
+        public double WingSpan { get; set; }
+
+        public Bird(string name, int age, double wingSpan) : base(name, age)
+        {
+            WingSpan = wingSpan;
+        }
+
+        public override void Show()
+        {
+            Console.WriteLine($"[Птах] Ім'я: {Name}, Вік: {Age}, Розмах крил: {WingSpan} м");
+        }
+    }
+
+    public class Zoo : IEnumerable<Animal>
+    {
+        private List<Animal> animals = new List<Animal>();
+        public void Add(Animal animal) => animals.Add(animal);
+        public IEnumerator<Animal> GetEnumerator() => animals.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    // Інтерфейси та класи для Task2
+    public interface ITrans : IFormattable, IComparable<ITrans>
+    {
+        void Show();
+        int GetCapacity();
+    }
+
+    public class Car : ITrans
+    {
+        public string Brand, Number;
+        public int Speed, Capacity;
+
+        public Car(string b, string n, int s, int c)
+        {
+            Brand = b; Number = n; Speed = s; Capacity = c;
+        }
+
+        public void Show() => Console.WriteLine($"[Car] {Brand}, {Number}, {Speed} km/h, {Capacity} kg");
+        public int GetCapacity() => Capacity;
+        public string ToString(string format, IFormatProvider formatProvider) => Brand;
+        public int CompareTo(ITrans other) => GetCapacity().CompareTo(other.GetCapacity());
+    }
+
+    public class Motorcycle : ITrans
+    {
+        public string Brand, Number;
+        public int Speed, Capacity;
+        public bool HasSidecar;
+
+        public Motorcycle(string b, string n, int s, int c, bool sidecar)
+        {
+            Brand = b; Number = n; Speed = s; HasSidecar = sidecar;
+            Capacity = HasSidecar ? c : 0;
+        }
+
+        public void Show() => Console.WriteLine($"[Moto] {Brand}, {Number}, {Speed} km/h, Коляска: {HasSidecar}, {Capacity} kg");
+        public int GetCapacity() => Capacity;
+        public string ToString(string format, IFormatProvider formatProvider) => Brand;
+        public int CompareTo(ITrans other) => GetCapacity().CompareTo(other.GetCapacity());
+    }
+
+    public class Truck : ITrans
+    {
+        public string Brand, Number;
+        public int Speed, BaseCapacity;
+        public bool HasTrailer;
+
+        public Truck(string b, string n, int s, int c, bool trailer)
+        {
+            Brand = b; Number = n; Speed = s; HasTrailer = trailer; BaseCapacity = c;
+        }
+
+        public void Show() => Console.WriteLine($"[Truck] {Brand}, {Number}, {Speed} km/h, Причіп: {HasTrailer}, {GetCapacity()} kg");
+        public int GetCapacity() => HasTrailer ? BaseCapacity * 2 : BaseCapacity;
+        public string ToString(string format, IFormatProvider formatProvider) => Brand;
+        public int CompareTo(ITrans other) => GetCapacity().CompareTo(other.GetCapacity());
+    }
+
+    // Власний виняток для Task3
+    public class MyStackOverflowException : Exception
+    {
+        public MyStackOverflowException(string message) : base(message) { }
+    }
+}
